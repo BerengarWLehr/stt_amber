@@ -13,6 +13,8 @@ from nc_py_api import AsyncNextcloudApp, NextcloudApp
 from nc_py_api.ex_app import anc_app, run_app, set_handlers
 from amber_script import AmberScript
 
+# See https://cloud-py-api.github.io/nc_py_api/NextcloudApp.html
+# also https://cloud-py-api.github.io/app_api/notes_for_developers/ExAppOverview.html
 
 UPDATE_INTERVAL = 10
 amber_script = AmberScript("A", "0")

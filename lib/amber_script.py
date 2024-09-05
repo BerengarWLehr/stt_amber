@@ -3,6 +3,7 @@
 
 import requests
 
+# See https://amberscript.github.io/api-docs
 
 class AmberScript:
     AMBERSCRIPT_URL='https://qs.amberscript.com'
