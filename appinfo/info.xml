@@ -1,21 +1,20 @@
 <?xml version="1.0"?>
 <info>
 	<id>stt_whisper2</id>
-	<name>Local Whisper Speech To Text</name>
-	<summary>Local Whisper Speech To Text</summary>
+	<name>Remote Amber Speech To Text</name>
+	<summary>Remote Amber Speech To Text</summary>
 	<description>
 	<![CDATA[
 **Requires [`AppAPI`](https://github.com/cloud-py-api/app_api) to work.**
 	]]></description>
-	<version>1.1.5</version>
-	<licence>MIT</licence>
-	<author mail="mklehr@gmx.net" homepage="https://github.com/marcelklehr">Marcel Klehr</author>
-	<author mail="bigcat88@icloud.com" homepage="https://github.com/bigcat88">Alexander Piskun</author>
-	<namespace>PyAppV2_stt_whisper2</namespace>
+	<version>0.1.0</version>
+	<licence>MPL 2.0</licence>
+	<author mail="berengar.lehr@uni-jena.de" homepage="https://www.uni-jena.de/10680/multimediazentrum">Berengar Lehr</author>
+	<namespace>PyAppV1_stt_amber</namespace>
 	<category>tools</category>
-	<website>https://github.com/nextcloud/stt_whisper2</website>
-	<bugs>https://github.com/nextcloud/stt_whisper2/issues</bugs>
-	<repository type="git">https://github.com/nextcloud/stt_whisper2</repository>
+	<website>https://github.com/BerengarWLehr/stt_amber</website>
+	<bugs>https://github.com/BerengarWLehr/stt_amber/issues</bugs>
+	<repository type="git">https://github.com/BerengarWLehr/stt_amber</repository>
 	<dependencies>
 		<nextcloud min-version="29" max-version="30"/>
 	</dependencies>
