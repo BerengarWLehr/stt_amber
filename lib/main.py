@@ -1,74 +1,95 @@
-"""Tha main module of the llm2 app
-"""
+"""Simplest example of files_dropdown_menu + notification."""
 
 import threading
 import tempfile
 import time
-import typing
+from typing import Annotated
 from contextlib import asynccontextmanager
-import os
+from os import path
 
-from fastapi import Depends, FastAPI, UploadFile
-from nc_py_api import AsyncNextcloudApp, NextcloudApp
-from nc_py_api.ex_app import anc_app, run_app, set_handlers
+from fastapi import Depends, FastAPI, responses
+from nc_py_api import FsNode, AsyncNextcloudApp, NextcloudApp
+from nc_py_api.ex_app import AppAPIAuthMiddleware, LogLvl, nc_app, run_app, set_handlers
+from nc_py_api.files import ActionFileInfoEx
 from amber_script import AmberScript
 
 # See https://cloud-py-api.github.io/nc_py_api/NextcloudApp.html
 # also https://cloud-py-api.github.io/app_api/notes_for_developers/ExAppOverview.html
 
 UPDATE_INTERVAL = 10
-amber_script = AmberScript("A", "0")
-task_ids = {}
+KEY_FILE = 'secret.key'
+# task_ids: dict[int, int] = {}
+with open(KEY_FILE, 'r', encoding='utf8') as key_file:
+    amber_script = AmberScript(key_file.read())
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     set_handlers(app, enabled_handler)
     yield
 
+
 APP = FastAPI(lifespan=lifespan)
+APP.add_middleware(AppAPIAuthMiddleware)
 
 
-def push_to_amberscript(file_path, nc_task_id):
-    as_task_id = amber_script.transcribe(file_path)
-    task_ids[as_task_id] = nc_task_id
-    update_process = threading.Thread(target=check_for_done, args=[as_task_id])
+def check_for_done(as_task_id: int, in_path: str, save_path: str, nc: NextcloudApp):
+    try:
+        while not amber_script.done(as_task_id):
+            time.sleep(UPDATE_INTERVAL)
+        with tempfile.NamedTemporaryFile(mode="w", encoding='utf8', suffix=".srt",) as tmp_out:
+            tmp_out.write(amber_script.fetch(as_task_id))
+            nc.log(LogLvl.WARNING, "Transcription is ready")
+            nc.files.upload_stream(save_path, tmp_out)
+            nc.log(LogLvl.WARNING, "Result uploaded")
+            nc.notifications.create(f"{in_path} finished!", f"{save_path} is waiting for you!")
+    except Exception as e:
+        nc.log(LogLvl.ERROR, str(e))
+        nc.notifications.create("Error occurred", "Error information was written to log file")
+
+
+def push_to_amberscript(input_file: FsNode, nc: NextcloudApp):
+    save_path = path.splitext(input_file.user_path)[0] + ".src"
+    nc.log(LogLvl.WARNING, f"Processing:{input_file.user_path} -> {save_path}")
+    with tempfile.NamedTemporaryFile(mode="w+b") as tmp_in:
+        nc.files.download2stream(input_file, tmp_in)
+        nc.log(LogLvl.WARNING, "File downloaded")
+        tmp_in.flush()
+        as_task_id = amber_script.transcribe(tmp_in.name)
+    # task_ids[as_task_id] = (nc, save_path)
+    update_process = threading.Thread(
+        target=check_for_done,
+        args=[as_task_id, input_file.name, save_path, nc])
     update_process.start()
-
-
-def check_for_done(as_task_id: int):
-    while not amber_script.done(as_task_id):
-        time.sleep(UPDATE_INTERVAL)
-    NextcloudApp().providers.speech_to_text.report_result(
-        task_ids[as_task_id],
-        amber_script.fetch(as_task_id))
 
 
 @APP.post("/amberscript")
 async def add_transcription(
-    _nc: typing.Annotated[AsyncNextcloudApp, Depends(anc_app)],
-    data: UploadFile,
-    task_id: int,
+    files: ActionFileInfoEx,
+    nc: Annotated[NextcloudApp, Depends(nc_app)]
 ):
-    if data.filename is None:
-        return
-    _, file_extension = os.path.splitext(data.filename)
-    task_file = tempfile.NamedTemporaryFile(mode="w+b", suffix=f"{file_extension}")
-    task_file.write(await data.read())
-    push_to_amberscript(task_file, task_id)
+    for task_file in files.files:
+        push_to_amberscript(task_file.to_fs_node(), nc)
+    return responses.Response()
 
 
 async def enabled_handler(enabled: bool, nc: AsyncNextcloudApp) -> str:
     print(f"enabled={enabled}")
-    if enabled is True:
-        await nc.providers.speech_to_text.register(
-            'stt_amberscript',
-            'AmberScript',
-            '/amberscript')
-    else:
-        await nc.providers.speech_to_text.unregister(
-            'stt_amberscript')
-    return ""
+    try:
+        if enabled:
+            await nc.ui.files_dropdown_menu.register_ex(
+                'stt_amberscript',
+                'Transcribe',
+                '/amberscript',
+                mime='audio'
+            )
+        else:
+            await nc.ui.files_dropdown_menu.unregister(
+                'stt_amberscript')
+    except Exception as e:
+        return str(e)
+    return ''
 
 
-if __name__ == "__main__":
-    run_app("main:APP", log_level="trace")
+if __name__ == '__main__':
+    run_app('main:APP', log_level='trace')
