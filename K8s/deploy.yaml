@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud2amberscript
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud2amberscript
+  template:
+    metadata:
+      labels:
+        app: nextcloud2amberscript
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: git.uni-jena.de:5050/rz/mmz/nextcloud2amberscript
+          imagePullPolicy: Always
+          name: nextcloud2amberscript
+          ports:
+            - containerPort: 80
+      imagePullSecrets:
+        - name: gitlab

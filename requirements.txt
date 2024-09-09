@@ -1,3 +1,3 @@
-nc_py_api[app]>=0.8.0
+nc_py_api[app,ex_app,files]>=0.8.0
 pydantic
 requests

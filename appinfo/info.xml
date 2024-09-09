@@ -1,32 +1,28 @@
 <?xml version="1.0"?>
 <info>
-	<id>stt_whisper2</id>
-	<name>Remote Amber Speech To Text</name>
-	<summary>Remote Amber Speech To Text</summary>
+	<id>stt_amber</id>
+	<name>Transcription</name>
+	<summary>Transcribe audiofiles via AmberScript</summary>
 	<description>
 	<![CDATA[
-**Requires [`AppAPI`](https://github.com/cloud-py-api/app_api) to work.**
+Transcribe files via the context menu by sending them to amber script and later uploading the transcription result.
 	]]></description>
 	<version>0.1.0</version>
 	<licence>MPL 2.0</licence>
 	<author mail="berengar.lehr@uni-jena.de" homepage="https://www.uni-jena.de/10680/multimediazentrum">Berengar Lehr</author>
 	<namespace>PyAppV1_stt_amber</namespace>
 	<category>tools</category>
-	<website>https://github.com/BerengarWLehr/stt_amber</website>
-	<bugs>https://github.com/BerengarWLehr/stt_amber/issues</bugs>
-	<repository type="git">https://github.com/BerengarWLehr/stt_amber</repository>
+	<website>https://git.uni-jena.de/rz/mmz/nextcloud2amberscript</website>
+	<bugs>https://git.uni-jena.de/rz/mmz/nextcloud2amberscript/-/issues</bugs>
+	<repository type="git">git@git.uni-jena.de:rz/mmz/nextcloud2amberscript.git</repository>
 	<dependencies>
 		<nextcloud min-version="29" max-version="30"/>
 	</dependencies>
 	<external-app>
 		<docker-install>
-			<registry>ghcr.io</registry>
-			<image>nextcloud/stt_whisper2</image>
-			<image-tag>1.1.5</image-tag>
+			<registry>git.uni-jena.de:5050</registry>
+			<image>rz/mmz/nextcloud2amberscript</image>
+			<image-tag>latest</image-tag>
 		</docker-install>
-		<scopes>
-			<value>AI_PROVIDERS</value>
-		</scopes>
-		<system>false</system>
 	</external-app>
 </info>

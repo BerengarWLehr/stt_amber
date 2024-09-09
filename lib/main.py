@@ -18,6 +18,7 @@ from amber_script import AmberScript
 
 UPDATE_INTERVAL = 10
 KEY_FILE = 'secret.key'
+FORMAT = 'srt'
 # task_ids: dict[int, int] = {}
 with open(KEY_FILE, 'r', encoding='utf8') as key_file:
     amber_script = AmberScript(key_file.read())
@@ -28,7 +29,6 @@ async def lifespan(app: FastAPI):
     set_handlers(app, enabled_handler)
     yield
 
-
 APP = FastAPI(lifespan=lifespan)
 APP.add_middleware(AppAPIAuthMiddleware)
 
@@ -37,19 +37,19 @@ def check_for_done(as_task_id: int, in_path: str, save_path: str, nc: NextcloudA
     try:
         while not amber_script.done(as_task_id):
             time.sleep(UPDATE_INTERVAL)
-        with tempfile.NamedTemporaryFile(mode="w", encoding='utf8', suffix=".srt",) as tmp_out:
-            tmp_out.write(amber_script.fetch(as_task_id))
-            nc.log(LogLvl.WARNING, "Transcription is ready")
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf8', suffix=f'.{FORMAT}') as tmp_out:
+            tmp_out.write(amber_script.fetch(as_task_id, FORMAT))
+            nc.log(LogLvl.WARNING, 'Transcription is ready')
             nc.files.upload_stream(save_path, tmp_out)
-            nc.log(LogLvl.WARNING, "Result uploaded")
-            nc.notifications.create(f"{in_path} finished!", f"{save_path} is waiting for you!")
+            nc.log(LogLvl.WARNING, 'Result uploaded')
+            nc.notifications.create(f'{in_path} finished!', f'{save_path} is waiting for you!')
     except Exception as e:
         nc.log(LogLvl.ERROR, str(e))
-        nc.notifications.create("Error occurred", "Error information was written to log file")
+        nc.notifications.create('Error occurred', 'Error information was written to log file')
 
 
 def push_to_amberscript(input_file: FsNode, nc: NextcloudApp):
-    save_path = path.splitext(input_file.user_path)[0] + ".src"
+    save_path = path.splitext(input_file.user_path)[0] + '.' + FORMAT
     nc.log(LogLvl.WARNING, f"Processing:{input_file.user_path} -> {save_path}")
     with tempfile.NamedTemporaryFile(mode="w+b") as tmp_in:
         nc.files.download2stream(input_file, tmp_in)

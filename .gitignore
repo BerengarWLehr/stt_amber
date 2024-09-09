@@ -93,3 +93,5 @@ MANIFEST
 converted/
 
 geckodriver.log
+
+secret.*
